@@ -1,8 +1,9 @@
 import { type Request, type Response } from "express";
 import { signupData } from "../models/signup";
 import * as bcrypt from 'bcryptjs'
-import sendOTPEmail from "../utilities/nodemailer.service"
+import sendOTPEmail from "../utilities/nodemailer"
 import jwt from "jsonwebtoken"
+import otpFunction from "../utilities/otpFunction";
 
 export default {
     signupPost : async (req: Request, res: Response) =>{
@@ -36,9 +37,11 @@ export default {
                     if ( userExist ) {
                         // Checks user is verified or not
                         if ( !userExist.isVerified ) {
-                            const otp = 1234
+                            // Generating OTP 
+                            const otp: number = otpFunction.otpGenerator()
+                            // Sending OTP through nodemailer
                             sendOTPEmail(email, otp)
-                            return res.status(200).json({ success : true, notVerified : true })
+                            return res.status(200).json({ success : true, notVerified : true, email })
                         } else {
                             return res.status(409).json({ success : false, notVerified : false, message : "User already exist" })
                         }
@@ -53,10 +56,11 @@ export default {
                         const newUser = await newSchema.save()
                         
                         if ( newUser ){
+                            // Generating OTP 
+                            const otp: number = otpFunction.otpGenerator()
                             // Sending OTP through nodemailer
-                            const otp = 1234
                             sendOTPEmail(email, otp)
-                            return res.status(200).json({ success : true, isDataSaved : true })
+                            return res.status(200).json({ success : true, isDataSaved : true, email })
                         } else {
                             return res.status(500).json({ success : false, isDataSaved : false, message : "Signup failed, try again later" })
                         }
@@ -74,7 +78,7 @@ export default {
         const { email, password } = req.body
 
         if ( !email || !password ) {
-            return res.status(400).json({ success : false, missingData : true, message : "Provide reequired datas" })
+            return res.status(400).json({ success : false, missingData : true, message : "Provide required datas" })
         } else {
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
             const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8}$/
@@ -111,8 +115,9 @@ export default {
                                     return res.status(200).json({ success : true, user : true, token })
                                 }   
                             } else {
+                                // Generating OTP 
+                                const otp: number = otpFunction.otpGenerator()
                                 // Sending OTP through nodemailer
-                                const otp = 1234
                                 sendOTPEmail(email, otp)
                                 return res.status(200).json({ success : true, notVerified : true })
                             }
@@ -126,6 +131,42 @@ export default {
         }
     },
 
+    otpPost: async (req: Request, res: Response)=>{
+        const { otp, email } = req.body
+        if ( !otp ) {
+            return res.status(400).json({ success : false, message : "Wrong OTP number" })
+        } else {
+            try {
+                // Calling function for check user-provided OTP
+                const checkedOTP = otpFunction.otpValidator( otp )
+                
+                if ( !checkedOTP ) {
+                    return res.status(422).json({ success : false, message : "Invalid OTP, provide correct OTP" })
+                } else {
+                    //Updating signup data from database
+                    const verified = await signupData.findOneAndUpdate(
+                        { 
+                            email
+                        },
+                        {
+                            $set : {
+                                isVerified : true
+                            }
+                        }
+                    )
+                    if ( verified ) {
+                        return res.status(200).json({ success : true })
+                    } else {
+                        return res.status(500).json({ success : false, isDataSaved : false, message : "OTP verification failed, try again later" })
+                    }
+                }
+            } catch (error) {
+                // catching error 
+                return res.status(400).json({ success : false, message : "Server error" })
+            }
+        } 
+        
+    }
 }
 
 
