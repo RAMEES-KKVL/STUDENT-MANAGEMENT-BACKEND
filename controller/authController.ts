@@ -166,7 +166,63 @@ export default {
             }
         } 
         
-    }
+    },
+
+    forgetPassPost: async (req: Request, res: Response)=>{
+        const { email } = req.body
+        if ( !email ) {
+            return res.status(400).json({ success : false, message : "Provide email" })
+        } else {
+            try {
+                const userExist = await signupData.findOne({ email })
+
+                if ( !userExist ) {
+                    return res.status(404).json({ success : false, message : "User does not exist" })
+                } else {
+                    return res.status(200).json({ success : true, email })
+                }
+            } catch (error) {
+                // catching error 
+                return res.status(400).json({ success : false, message : "Server error" })
+            }
+        }
+    },
+
+    resetPassPost: async (req: Request, res: Response)=>{
+        const { email, password, confirmPassword } = req.body
+        if ( !email ) {
+            return res.status(404).json({ success : false, missingEmail : true })
+        } else {
+            if ( !password || !confirmPassword ) {
+                return res.status(400).json({ success : false, message : "All fields required" })
+            } else if ( password !== confirmPassword ) {
+                return res.status(400).json({ success : false, passwordMissmatch : true, message : "Passwords do not match. Please re-enter your password" })
+            } else {
+                try {
+                    const hashedPassword = await bcrypt.hash(password, 10)
+                    const passwordChanged = await signupData.findOneAndUpdate(
+                        {
+                            email
+                        },
+                        {
+                            $set : {
+                                password : hashedPassword
+                            }
+                        }
+                    )
+
+                    if ( passwordChanged ) {
+                        return res.status(200).json({ success : true }) 
+                    } else {
+                        return res.status(500).json({ success : false, isDataSaved : false, message : "Couldn't update password, try again later" })
+                    }
+                } catch (error) {
+                    // catching error 
+                    return res.status(400).json({ success : false, message : "Server error" })
+                }
+            }
+        }       
+    },
 }
 
 
