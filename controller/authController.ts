@@ -174,6 +174,7 @@ export default {
             return res.status(400).json({ success : false, message : "Provide email" })
         } else {
             try {
+                // Comparing the user-entered email with the database
                 const userExist = await signupData.findOne({ email })
 
                 if ( !userExist ) {
@@ -199,7 +200,9 @@ export default {
                 return res.status(400).json({ success : false, passwordMissmatch : true, message : "Passwords do not match. Please re-enter your password" })
             } else {
                 try {
+                    // Hashing password
                     const hashedPassword = await bcrypt.hash(password, 10)
+                    // Storing hashed password in the database
                     const passwordChanged = await signupData.findOneAndUpdate(
                         {
                             email
