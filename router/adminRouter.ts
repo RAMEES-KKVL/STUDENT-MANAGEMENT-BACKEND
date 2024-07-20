@@ -10,5 +10,6 @@ Router.delete("/delete-course", adminController.deleteCourse)
 
 Router.get("/batches", adminController.getBatches)
 Router.post("/add-batch", adminController.addBatch)
+Router.delete("/delete-batch", adminController.deleteBatch)
 
 export default Router
