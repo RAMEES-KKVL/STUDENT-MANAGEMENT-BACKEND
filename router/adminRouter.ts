@@ -8,4 +8,7 @@ Router.post("/add-course", adminController.addCourse)
 Router.post("/add-course_topics", adminController.addCourseTopic)
 Router.delete("/delete-course", adminController.deleteCourse)
 
+Router.get("/batches", adminController.getBatches)
+Router.post("/add-batch", adminController.addBatch)
+
 export default Router

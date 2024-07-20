@@ -1,5 +1,6 @@
 import { type Request, type Response } from "express"
 import { courseModel } from "../models/courseModel"
+import { batchModel } from "../models/batchModel"
 
 export default {
     getCourses: async (req: Request, res: Response) => {
@@ -141,5 +142,47 @@ export default {
         }
     },
 
-    
+    getBatches: async ( req: Request, res: Response )=>{
+        try {            
+            const batchList = await batchModel.find()
+            if ( batchList ) {
+                return res.status(200).json({ success : true, batchList })
+            } else {
+                return res.status(404).json({ success : false, message : "Couldn't find list" })
+            }
+        } catch (error) {
+            return res.status(500).json({ success : false, message : "Server Error" })
+        }
+    },
+
+    addBatch: async ( req: Request, res: Response )=>{
+        const { batchName, startingDate } = req.body
+        if ( !batchName || !startingDate ) {
+            return res.status(400).json({ success : false, message : "All fields are required" })
+        } else {
+            try {
+                const batchExist = await batchModel.findOne({ batchName })
+                if ( batchExist ) {
+                    return res.status(409).json({ success : false, message : "Batch already exist" })
+                } else {
+                    // Saving course details into database 
+                    const newSchema = new batchModel({
+                        batchName,
+                        startingDate
+                    })
+                    const batchCreated = await newSchema.save()
+
+                    if ( batchCreated ) {
+                        const createdBatch = await batchModel.findOne({ batchName })
+                        return res.status(200).json({ success : true, createdBatch })
+                    } else {
+                        return res.status(500).json({ success : false, message : "Couldn't add batch, try again." })
+                    }
+                }
+            } catch (error) {
+                // catching the error
+                return res.status(400).json({ success : false, message: 'Server error' })
+            }
+        }       
+    },
 }
