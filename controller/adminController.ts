@@ -124,5 +124,22 @@ export default {
             // catching the error
             return res.status(400).json({ success : false, message: 'Server error' })
         }
-    }
+    },
+
+    deleteCourse: async ( req: Request, res: Response ) => {
+        try {
+            const courseName = req.query.courseName
+            const deleted = await courseModel.findOneAndDelete({ courseName })
+            if ( deleted ) {
+                return res.status(200).json({ success : true })
+            } else {
+                return res.status(500).json({ success : false })
+            }
+        } catch (error) {
+            // catching the error
+            return res.status(400).json({ success : false, message: 'Server error' })
+        }
+    },
+
+    
 }
