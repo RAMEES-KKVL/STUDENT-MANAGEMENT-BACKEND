@@ -134,7 +134,7 @@ export default {
             if ( deleted ) {
                 return res.status(200).json({ success : true })
             } else {
-                return res.status(500).json({ success : false })
+                return res.status(500).json({ success : false, message : "Couldn't delete Course" })
             }
         } catch (error) {
             // catching the error
@@ -193,11 +193,44 @@ export default {
             if ( deleted ) {
                 return res.status(200).json({ success : true })
             } else {
-                return res.status(500).json({ success : false })
+                return res.status(500).json({ success : false, message : "Batch creation failed" })
             }
         } catch (error) {
             // catching the error
             return res.status(400).json({ success : false, message: 'Server error' })
         }
     },
+
+    editBatch: async ( req: Request, res: Response )=>{
+        const { batchName, startingDate } = req.body
+        const batchId = req.query.batchId
+        
+        if ( !batchName || !startingDate ) {
+            return res.status(400).json({ success : false, message : "All fields are required" })
+        } else {
+            try {
+                const updated = await batchModel.findOneAndUpdate(
+                    {
+                        _id : batchId
+                    },
+                    {
+                        $set : {
+                            batchName,
+                            startingDate
+                        }
+                    }
+                )
+
+                if ( updated ) {
+                    const updatedBatch = await batchModel.findOne({ _id : batchId })
+                    return res.status(200).json({ success : true, updatedBatch })
+                } else {
+                    return res.status(500).json({ success : false, message : "Couldn't update Batch details" })
+                }
+            } catch (error) {
+                // catching the error
+                return res.status(400).json({ success : false, message: 'Server error' })
+            }
+        }
+    }
 }
