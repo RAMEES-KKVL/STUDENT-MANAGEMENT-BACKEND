@@ -315,4 +315,46 @@ export default {
             return res.status(400).json({ success : false, message: 'Server error' })
         }
     },
+
+    editStudent: async ( req: Request, res: Response )=>{
+        const { 
+            fullName, 
+            email,
+            phone,
+            course,
+            batch 
+        } = req.body
+        const studentId = req.query.studentId
+        
+        if ( !fullName || !email || ! phone || !course || !batch ) {
+            return res.status(400).json({ success : false, message : "All fields are required" })
+        } else {
+            try {
+                const updated = await studentData.findOneAndUpdate(
+                    {
+                        _id : studentId
+                    },
+                    {
+                        $set : {
+                            fullName,
+                            email,
+                            phone,
+                            course,
+                            batch
+                        }
+                    }
+                )
+
+                if ( updated ) {
+                    const updatedStudent = await studentData.findOne({ _id : studentId })
+                    return res.status(200).json({ success : true, updatedStudent })
+                } else {
+                    return res.status(500).json({ success : false, message : "Couldn't update Student details" })
+                }
+            } catch (error) {
+                // catching the error
+                return res.status(400).json({ success : false, message: 'Server error' })
+            }
+        }
+    },
 }
