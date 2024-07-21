@@ -13,4 +13,7 @@ Router.post("/add-batch", adminController.addBatch)
 Router.delete("/delete-batch", adminController.deleteBatch)
 Router.patch("/edit-batch", adminController.editBatch)
 
+Router.get("/students", adminController.getStudents)
+Router.post("/add-student", adminController.addStudent)
+
 export default Router

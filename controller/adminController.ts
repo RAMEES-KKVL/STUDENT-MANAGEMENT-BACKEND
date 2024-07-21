@@ -1,6 +1,7 @@
 import { type Request, type Response } from "express"
 import { courseModel } from "../models/courseModel"
 import { batchModel } from "../models/batchModel"
+import { studentData } from "../models/studentModel"
 
 export default {
     getCourses: async (req: Request, res: Response) => {
@@ -232,5 +233,86 @@ export default {
                 return res.status(400).json({ success : false, message: 'Server error' })
             }
         }
-    }
+    },
+
+    getStudents: async ( req: Request, res: Response )=>{
+        try {            
+            const studentsList = await studentData.find()
+            if ( studentsList ) {
+                return res.status(200).json({ success : true, studentsList })
+            } else {
+                return res.status(404).json({ success : false, message : "Couldn't find list" })
+            }
+        } catch (error) {
+            return res.status(500).json({ success : false, message : "Server Error" })
+        }
+    },
+
+    addStudent: async ( req: Request, res: Response )=>{
+        const { 
+            fullName, 
+            email,
+            phone,
+            course,
+            batch
+        } = req.body
+        
+        try {
+            if ( !fullName || !email || ! phone || !course || !batch ) {
+                return res.status(400).json({ success : false, message : "All fields are required" })
+            } else if ( await studentData.findOne({ email }) ) {
+                return res.status(409).json({ success : false, message : "Email already exist" })
+            } else {
+                const batchAdded = await batchModel.findOneAndUpdate(
+                    {
+                        batchName : batch
+                    },
+                    {
+                        
+                        $push : {
+                            strength : email
+                        }
+                    },
+                    {
+                        new: true 
+                    }
+                )
+                if ( batchAdded ) {
+                    const newSchema = new studentData({
+                        fullName,
+                        email,
+                        phone,
+                        course,
+                        batch
+                    })
+                    const added = await newSchema.save()
+                    if ( added ) {
+                        const addedStudent = await studentData.findOne({ email })
+                        return res.status(200).json({ success : true, addedStudent })
+                    } else {
+                        await batchModel.findOneAndUpdate(
+                            {
+                                batchName : batch
+                            },
+                            {
+                                
+                                $pull : {
+                                    strength : email
+                                }
+                            },
+                            {
+                                new: true 
+                            }
+                        )
+                        return res.status(500).json({ success : false, message : "Couldn't add student, try again." })
+                    }
+                } else {
+                    return res.status(500).json({ success : false, message : "Couldn't add student, try again." })
+                }
+            }
+        } catch (error) {
+            // catching the error
+            return res.status(400).json({ success : false, message: 'Server error' })
+        }
+    },
 }
