@@ -255,7 +255,7 @@ export default {
             phone,
             course,
             batch
-        } = req.body
+        } = req.body        
         
         try {
             if ( !fullName || !email || ! phone || !course || !batch ) {
@@ -355,6 +355,54 @@ export default {
                 // catching the error
                 return res.status(400).json({ success : false, message: 'Server error' })
             }
+        }
+    },
+
+    deleteStudent: async ( req: Request, res: Response )=>{
+        try {
+            const studentId = req.query.studentId
+            const studentdata = await studentData.findOne({ _id : studentId })
+            const email = studentdata?.email
+            const batchName = studentdata?.batch
+            const removedFromBatch = await batchModel.findOneAndUpdate(
+                {
+                    batchName
+                },
+                {
+                    $pull : {
+                        strength : email
+                    }
+                },
+                {
+                    new : true
+                }
+            )
+            if ( removedFromBatch ) {
+                const deleted = await studentData.findOneAndDelete({ _id : studentId })
+                if ( deleted ) {
+                    return res.status(200).json({ success : true })
+                } else {
+                    await batchModel.findOneAndUpdate(
+                        {
+                            batchName
+                        },
+                        {
+                            $push : {
+                                strength : email
+                            }
+                        },
+                        {
+                            new : true
+                        }
+                    )
+                    return res.status(500).json({ success : false, message : "Couldn't remove Student details" })
+                }
+            } else {
+                return res.status(500).json({ success : false, message : "Couldn't remove Student details" })
+            }
+        } catch (error) {
+            // catching the error
+            return res.status(400).json({ success : false, message: 'Server error' })
         }
     },
 }

@@ -16,5 +16,6 @@ Router.patch("/edit-batch", adminController.editBatch)
 Router.get("/students", adminController.getStudents)
 Router.post("/add-student", adminController.addStudent)
 Router.patch("/edit-student", adminController.editStudent)
+Router.delete("/delete-student", adminController.deleteStudent)
 
 export default Router
