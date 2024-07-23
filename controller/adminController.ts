@@ -2,6 +2,7 @@ import { type Request, type Response } from "express"
 import { courseModel } from "../models/courseModel"
 import { batchModel } from "../models/batchModel"
 import { studentData } from "../models/studentModel"
+import { adminModel } from "../models/adminModel"
 
 export default {
     getCourses: async (req: Request, res: Response) => {
@@ -71,7 +72,8 @@ export default {
                     const newCourse = await newSchema.save()
                     
                     if ( newCourse ) {
-                        return res.status(200).json({ success : true, courseName })
+                        const addedCourse = await courseModel.findOne({ courseName })
+                        return res.status(200).json({ success : true, courseName, addedCourse })
                     } else {
                         return res.status(500).json({ success : false, message : "Couldn't add course, try again." })
                     }
@@ -405,4 +407,62 @@ export default {
             return res.status(400).json({ success : false, message: 'Server error' })
         }
     },
+
+
+    getAdmin: async ( req: Request, res: Response ) => {
+        try {
+            const adminList = await adminModel.find()
+            if ( adminList ) {
+                return res.status(200).json({ success : true, adminList })
+            } else {
+                return res.status(404).json({ success : false, message : "Couldn't find list" })
+            }
+        } catch (error) {
+            // catching the error
+            return res.status(400).json({ success : false, message: 'Server error' })
+        }
+    },
+
+    addAdmin: async ( req: Request, res: Response ) => {
+        const { 
+            fullName,
+            email, 
+            phone, 
+            Admin, 
+            Course, 
+            Batch, 
+            Students 
+        } = req.body
+
+        if ( !fullName || !email || ! phone || !Admin || !Course || !Batch || !Students ) {
+            return res.status(400).json({ success : false, message : "All fields are required" })
+        } else {
+            try {
+                if ( await adminModel.findOne({ email }) ) {
+                    return res.status(409).json({ success : false, message : "Email already exist" })
+                } else {
+                    const newSchema = new adminModel({
+                        fullName,
+                        email,
+                        phone,
+                        Admin,
+                        Course,
+                        Batch,
+                        Students
+                    })
+                    const adminAdded = await newSchema.save()
+
+                    if ( adminAdded ) {
+                        const addedAdmin = await adminModel.findOne({ email })
+                        return res.status(200).json({ success : true, addedAdmin })
+                    } else {
+                        return res.status(500).json({ success : false, message : "Couldn't add Admin, try again." })
+                    }
+                }
+            } catch (error) {
+                // catching the error
+                return res.status(400).json({ success : false, message: 'Server error' })
+            }
+        }
+    }
 }
