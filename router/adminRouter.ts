@@ -20,5 +20,6 @@ Router.delete("/delete-student", adminController.deleteStudent)
 
 Router.get("/admins", adminController.getAdmin)
 Router.post("/add-admin", adminController.addAdmin)
+Router.patch("/edit-admin", adminController.editAdmin)
 
 export default Router

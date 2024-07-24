@@ -339,12 +339,12 @@ export default {
                     {
                         $set : {
                             fullName,
-                            email,
+                            email : email,
                             phone,
                             course,
                             batch
                         }
-                    }
+                    } 
                 )
 
                 if ( updated ) {
@@ -353,9 +353,12 @@ export default {
                 } else {
                     return res.status(500).json({ success : false, message : "Couldn't update Student details" })
                 }
-            } catch (error) {
-                // catching the error
-                return res.status(400).json({ success : false, message: 'Server error' })
+            } catch (error: any) {
+                if ( error.codeName === "DuplicateKey" ) {
+                    return res.status(400).json({ success : false, message: 'Email already exist' })
+                } else {
+                    return res.status(400).json({ success : false, message: 'Server error' })
+                }
             }
         }
     },
@@ -461,6 +464,57 @@ export default {
                 }
             } catch (error) {
                 // catching the error
+                return res.status(400).json({ success : false, message: 'Server error' })
+            }
+        }
+    },
+
+    editAdmin: async ( req: Request, res: Response ) => {
+        try {
+            const { 
+                fullName,
+                email, 
+                phone, 
+                Admin, 
+                Course, 
+                Batch, 
+                Students 
+            } = req.body
+            const adminId = req.query.adminId
+    
+            if ( !fullName || !email || ! phone || !Admin || !Course || !Batch || !Students ) {
+                return res.status(400).json({ success : false, message : "All fields are required" })
+            } else {
+                
+                const updated = await adminModel.findOneAndUpdate(
+                    {
+                        _id : adminId
+                    },
+                    {
+                        $set : {
+                            fullName,
+                            email,
+                            phone,
+                            Admin,
+                            Course,
+                            Batch,
+                            Students
+                        }
+                    }
+                )
+
+                if ( updated ) {
+                    const updatedAdmin = await adminModel.findOne({ _id : adminId })
+                    return res.status(200).json({ success : true, updatedAdmin })
+                } else {
+                    return res.status(500).json({ success : false, message : "Couldn't update Admin details" })
+                }
+            }
+        } catch (error: any) {
+            // catching the error            
+            if ( error.codeName === "DuplicateKey" ) {
+                return res.status(400).json({ success : false, message: 'Email already exist' })
+            } else {
                 return res.status(400).json({ success : false, message: 'Server error' })
             }
         }
