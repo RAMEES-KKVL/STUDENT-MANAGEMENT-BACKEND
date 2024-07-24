@@ -196,7 +196,7 @@ export default {
             if ( deleted ) {
                 return res.status(200).json({ success : true })
             } else {
-                return res.status(500).json({ success : false, message : "Batch creation failed" })
+                return res.status(500).json({ success : false, message : "Cou;dn't delete Batch" })
             }
         } catch (error) {
             // catching the error
@@ -411,7 +411,6 @@ export default {
         }
     },
 
-
     getAdmin: async ( req: Request, res: Response ) => {
         try {
             const adminList = await adminModel.find()
@@ -518,5 +517,19 @@ export default {
                 return res.status(400).json({ success : false, message: 'Server error' })
             }
         }
-    }
+    },
+
+    deleteAdmin: async ( req: Request, res: Response ) => {
+        try {
+            const adminId = req.query.adminId            
+            const deleted = await adminModel.findByIdAndDelete({ _id : adminId })
+            if ( deleted ) {
+                return res.status(200).json({ success : true })
+            } else {
+                return res.status(500).json({ success : false, message : "Batch creation failed" })
+            }
+        } catch (error) {
+            return res.status(400).json({ success : false, message: 'Server error' })
+        }
+    },
 }
